@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "contour.fullname" . }}
+  labels:
+    {{- include "contour.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8001
+      name: xds
+      protocol: TCP
+      targetPort: 8001
+  selector:
+    {{- include "contour.selectorLabels" . | nindent 4 }}

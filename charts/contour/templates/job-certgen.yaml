@@ -1,0 +1,35 @@
+{{- if .Values.certgen.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "contour.fullname" . }}-certgen
+  labels:
+    {{- include "contour.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hoom: pre-install
+spec:
+  ttlSecondsAfterFinished: 0
+  template:
+    metadata:
+      labels:
+        app: "contour-certgen"
+        {{- include "contour.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: contour
+          image: "{{ .Values.certgen.image.repository }}:{{ .Values.certgen.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.certgen.image.pullPolicy }}
+          command:
+            - contour
+            - certgen
+            - --incluster
+            - --kube
+            - --namespace={{ .Release.Namespace }}
+      restartPolicy: Never
+      serviceAccountName: {{ include "certgen.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.certgen.securityContext | nindent 8 }}
+  parallelism: 1
+  completions: 1
+  backoffLimit: 1
+{{- end }}
